@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <windows.h>
 
+#define decrease 1
+#define increase -1
 
 int main () {//							 	  0     1    2    3    4     5     6   7    8    9
 	const int MATRIX_WITH_DATA[7][10] = {	{-1  ,  19 , 2 ,  2 ,  0  ,  3  ,  2 , 1 , -1 , -3 /*0*/}, 
@@ -50,44 +52,28 @@ int main () {//							 	  0     1    2    3    4     5     6   7    8    9
 		printf("\n");
 	}
 
-	int getReversedMatrix(int matrix[COL_LENGTH][RAW_LENGTH]) {
-		int buffer[COL_LENGTH][RAW_LENGTH];
-		for (int i = 0; i <= COL_LENGTH / 2; i++) {
-			for (int j = 0; j <= COL_LENGTH / 2; j++)
-			{
-				buffer[i][j] = matrix[COL_LENGTH - i][j];
-				matrix[COL_LENGTH - i][j] = matrix[i][j];
-				matrix[i][j] = buffer[i][j];		
-			}
-		}
-		return matrix;
-	}
-
-	printf("Original matrix: \n");
-	drawMatrix(MATRIX_WITH_DATA);
-
-	int sortMatrixByHoar(int matrix[COL_LENGTH][RAW_LENGTH]) {
-		int useHoar(int m[COL_LENGTH][RAW_LENGTH], int L, int R, int i) {
+	int sortMatrixByHoar(int matrix[COL_LENGTH][RAW_LENGTH], int direction) {
+		int useHoar(int m[COL_LENGTH][RAW_LENGTH], int L, int R, int i, int dir) {
 			int K = L;
 			int M = R;
 
 			int T = m[L][i]; //опорний елемент
 			while (L < R) {
-				while (m[R][i] < T && L < R) { //рухаємо правий вказівник
+				while (m[R][i] * direction < T * direction && L < R) { //рухаємо правий вказівник
 					R--;
 				}
 
-				//знайшли число, що неправильно розташований відносно опорного елементу правим вказівником
+				//знайшли число, що неправильно розташоване відносно опорного елементу правим вказівником
 				if (L != R) {
 					m[L][i] = m[R][i];
 					L++;
 				}
 
-				while (m[L][i] > T && L < R) { //рухаємо лівий вказівник
+				while (m[L][i] * direction > T * direction && L < R) { //рухаємо лівий вказівник
 					L++;
 				}
 
-				//знайшли число, що неправильно розташований відносно опорного елементу лівим вказівником
+				//знайшли число, що неправильно розташоване відносно опорного елементу лівим вказівником
 				if (L != R) { 
 					m[R][i] = m[L][i];
 					R--;
@@ -101,14 +87,14 @@ int main () {//							 	  0     1    2    3    4     5     6   7    8    9
 			L = K;
 			R = P - 1;
 			if (P != L && P != R) {
-				m = useHoar(m, L, R, i);
+				m = useHoar(m, L, R, i, dir);
 			}
 
 			//рекурсивно визиваємо для правої частини
 			L = P + 1;
 			R = M;
 			if (P != L && P != R) {
-				m = useHoar(m, L, R, i);
+				m = useHoar(m, L, R, i, dir);
 			}
 			// немає елементів по один бік від опорного елемента -> повертаємо відсортований масив
 			return m;
@@ -116,22 +102,46 @@ int main () {//							 	  0     1    2    3    4     5     6   7    8    9
 
 		//сортуємо кожен стовпчик масиву
 		for (int i = 0; i < RAW_LENGTH; i++) {
-			matrix = useHoar(matrix, 0, COL_LENGTH - 1, i);
+			matrix = useHoar(matrix, 0, COL_LENGTH - 1, i, direction);
 		}
 
 		return matrix;
 	}
 
+	int x = 0;
+	while (x != 1 && x != 2 && x != 3) {
+		printf("Enter the matrix for testing (1 = original, 2 = sorted, 3 = reversed-sorted): ");
+		scanf("%d", &x);
+	}
+	printf("\n");
 
-	printf("Sorted matrix: \n");
-	drawMatrix(sortMatrixByHoar(MATRIX_WITH_DATA));
-	
-	const int REVERSED_SORTED_MATRIX = getReversedMatrix(sortMatrixByHoar(MATRIX_WITH_DATA));
-	printf("Reversed sorted matrix: \n");
-	drawMatrix(REVERSED_SORTED_MATRIX);
 
-	printf("Re-sorted reversed matrix: \n");
-	drawMatrix(sortMatrixByHoar(REVERSED_SORTED_MATRIX));
+	switch (x) {
+		case 1: //сортуємо масив з випадковими числами
+			printf("Original matrix: \n");
+			drawMatrix(MATRIX_WITH_DATA);
+
+			printf("Sorted matrix: \n");
+			drawMatrix(sortMatrixByHoar(MATRIX_WITH_DATA, decrease));
+
+			break;
+		case 2: //сортуємо завчасно відсортований масив
+			printf("Original matrix (originally sorted): \n");
+			drawMatrix(sortMatrixByHoar(MATRIX_WITH_DATA, decrease));
+
+			printf("Re-sorted sorted matrix: \n");
+			drawMatrix(sortMatrixByHoar(sortMatrixByHoar(MATRIX_WITH_DATA, decrease), decrease));
+
+			break;
+		case 3:  //сортуємо завчасно обернено відсортований масив
+			printf("Original matrix (originally reversed-sorted): \n");
+			drawMatrix(sortMatrixByHoar(MATRIX_WITH_DATA, increase));
+
+			printf("Re-sorted reversed-sorted matrix: \n");
+			drawMatrix(sortMatrixByHoar(sortMatrixByHoar(MATRIX_WITH_DATA, increase), decrease));
+
+			break;
+	}
 
 	system("pause");
 	return 0;
